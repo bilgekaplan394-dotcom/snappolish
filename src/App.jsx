@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp, Box, Move, Type, Smartphone, LayoutTemplate, Aperture, Sticker } from 'lucide-react';
 
 export default function SnapPolishApp() {
-  // State: Tüm Ayarlar
+  // State: All Settings
   const [settings, setSettings] = useState({
     padding: 40,
     shadow: 3, 
     borderRadius: 16,
     background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-    customBackground: null, // Özel arka plan resmi
+    customBackground: null, // Custom background image
     mockup: 'browser', // 'browser', 'phone', 'none'
     darkMode: true,
     scale: 100,
@@ -16,7 +16,7 @@ export default function SnapPolishApp() {
     tilt: 0,
     showWatermark: true,
     watermarkText: 'SnapPolish',
-    watermarkLogo: null, // Filigran logosu
+    watermarkLogo: null, // Watermark logo
     aspectRatio: 'auto', // 'auto', '1/1', '16/9', '4/5', '9/16'
   });
 
@@ -31,7 +31,7 @@ export default function SnapPolishApp() {
   const logoInputRef = useRef(null);
   const exportRef = useRef(null);
 
-  // html2canvas yükle
+  // Load html2canvas
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -40,14 +40,14 @@ export default function SnapPolishApp() {
     return () => { document.body.removeChild(script); };
   }, []);
 
-  // Tam ekran dinleyici
+  // Fullscreen listener
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Hazır Şablonlar (Presets)
+  // Presets
   const applyPreset = (type) => {
     switch(type) {
       case 'minimal':
@@ -62,7 +62,7 @@ export default function SnapPolishApp() {
     }
   };
 
-  // Resim Yükleme Yardımcısı
+  // Image Upload Helper
   const handleUpload = (e, targetState) => {
     const file = e.target.files[0];
     if (file) {
@@ -88,7 +88,7 @@ export default function SnapPolishApp() {
     setIsDownloading(true);
     try {
       if (typeof window.html2canvas === 'undefined') {
-        alert('İndirme aracı yükleniyor, lütfen bekleyin...');
+        alert('Download tool is loading, please wait...');
         setIsDownloading(false);
         return;
       }
@@ -105,7 +105,7 @@ export default function SnapPolishApp() {
       link.click();
     } catch (error) {
       console.error("Download error:", error);
-      alert("Hata oluştu. Lütfen tekrar deneyin.");
+      alert("An error occurred. Please try again.");
     } finally {
       setIsDownloading(false);
     }
@@ -120,13 +120,13 @@ export default function SnapPolishApp() {
   return (
     <div className="h-screen w-full bg-slate-950 text-slate-200 font-sans flex flex-col-reverse md:flex-row overflow-hidden">
       
-      {/* --- KONTROL PANELİ --- */}
+      {/* --- CONTROL PANEL --- */}
       <div 
         className={`bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col z-30 shadow-2xl transition-all duration-300 ease-in-out
           ${showSidebar ? 'h-[50vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0'}
         `}
       >
-        {/* Mobil Tutamaç */}
+        {/* Mobile Handle */}
         <div className="md:hidden w-full flex justify-center py-2 bg-slate-800 cursor-pointer" onClick={toggleSidebar}>
           <div className="w-12 h-1.5 bg-slate-600 rounded-full"></div>
         </div>
@@ -143,9 +143,9 @@ export default function SnapPolishApp() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar min-w-[320px]">
           
-          {/* 1. Hazır Şablonlar */}
+          {/* 1. Presets */}
           <section className="space-y-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Aperture size={14} /> Şablonlar</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Aperture size={14} /> Presets</label>
             <div className="grid grid-cols-3 gap-2">
               <button onClick={() => applyPreset('minimal')} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs hover:bg-slate-700 transition">Minimal</button>
               <button onClick={() => applyPreset('social')} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs hover:bg-slate-700 transition">Social</button>
@@ -153,11 +153,11 @@ export default function SnapPolishApp() {
             </div>
           </section>
 
-          {/* 2. Arka Plan */}
+          {/* 2. Background */}
           <section className="space-y-3">
             <div className="flex justify-between">
-               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Palette size={14} /> Arka Plan</label>
-               <button onClick={() => bgInputRef.current?.click()} className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1">+ Özel Resim</button>
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Palette size={14} /> Background</label>
+               <button onClick={() => bgInputRef.current?.click()} className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1">+ Custom Image</button>
                <input type="file" ref={bgInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'bg')} />
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -172,19 +172,19 @@ export default function SnapPolishApp() {
             </div>
           </section>
 
-          {/* 3. Çerçeve & Mockup */}
+          {/* 3. Frame & Mockup */}
           <section className="space-y-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Smartphone size={14} /> Çerçeve</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Smartphone size={14} /> Frame</label>
             <div className="grid grid-cols-3 gap-2">
                <button onClick={() => setSettings({...settings, mockup: 'browser'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'browser' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Browser</button>
                <button onClick={() => setSettings({...settings, mockup: 'phone'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'phone' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Phone</button>
-               <button onClick={() => setSettings({...settings, mockup: 'none'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'none' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Yok</button>
+               <button onClick={() => setSettings({...settings, mockup: 'none'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'none' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>None</button>
             </div>
           </section>
 
-          {/* 4. Boyut & Yerleşim */}
+          {/* 4. Size & Layout */}
           <section className="space-y-4">
-             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><LayoutTemplate size={14} /> Boyutlar</label>
+             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><LayoutTemplate size={14} /> Dimensions</label>
              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 {['auto', '1/1', '16/9', '4/5', '9/16'].map(ratio => (
                   <button 
@@ -198,15 +198,15 @@ export default function SnapPolishApp() {
              </div>
              
              <div className="space-y-1">
-               <div className="flex justify-between text-xs text-slate-400"><span>Dolgu</span><span>{settings.padding}px</span></div>
+               <div className="flex justify-between text-xs text-slate-400"><span>Padding</span><span>{settings.padding}px</span></div>
                <input type="range" min="0" max="150" value={settings.padding} onChange={(e) => setSettings({...settings, padding: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
              </div>
           </section>
 
-          {/* 5. Markalama (Filigran) */}
+          {/* 5. Branding (Watermark) */}
           <section className="space-y-3">
              <div className="flex justify-between items-center">
-               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Sticker size={14} /> Filigran</label>
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Sticker size={14} /> Watermark</label>
                <input type="checkbox" checked={settings.showWatermark} onChange={() => setSettings(s => ({...s, showWatermark: !s.showWatermark}))} className="accent-cyan-500" />
              </div>
              
@@ -217,10 +217,10 @@ export default function SnapPolishApp() {
                    value={settings.watermarkText} 
                    onChange={(e) => setSettings({...settings, watermarkText: e.target.value})}
                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 focus:border-cyan-500 outline-none"
-                   placeholder="Marka Adınız"
+                   placeholder="Your Brand Name"
                  />
                  <div className="flex items-center gap-2">
-                   <button onClick={() => logoInputRef.current?.click()} className="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1.5 rounded text-slate-300 transition">Logo Yükle</button>
+                   <button onClick={() => logoInputRef.current?.click()} className="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1.5 rounded text-slate-300 transition">Upload Logo</button>
                    {settings.watermarkLogo && <button onClick={() => setSettings({...settings, watermarkLogo: null})} className="text-rose-400 p-1"><X size={14}/></button>}
                    <input type="file" ref={logoInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'logo')} />
                  </div>
@@ -228,16 +228,16 @@ export default function SnapPolishApp() {
              )}
           </section>
 
-          {/* 6. Transform & Efektler */}
+          {/* 6. Transform & Effects */}
           <section className="space-y-4">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Move size={14} /> Efektler</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Move size={14} /> Effects</label>
             <div className="grid grid-cols-2 gap-4">
                <div>
-                 <span className="text-[10px] text-slate-400 block mb-1">Döndür ({settings.rotate}°)</span>
+                 <span className="text-[10px] text-slate-400 block mb-1">Rotate ({settings.rotate}°)</span>
                  <input type="range" min="-20" max="20" value={settings.rotate} onChange={(e) => setSettings({...settings, rotate: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
                </div>
                <div>
-                 <span className="text-[10px] text-slate-400 block mb-1">Eğim ({settings.tilt}°)</span>
+                 <span className="text-[10px] text-slate-400 block mb-1">Tilt ({settings.tilt}°)</span>
                  <input type="range" min="-20" max="20" value={settings.tilt} onChange={(e) => setSettings({...settings, tilt: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
                </div>
             </div>
@@ -248,19 +248,19 @@ export default function SnapPolishApp() {
         <div className="p-4 border-t border-slate-800 bg-slate-900 min-w-[320px] flex gap-2">
           <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'main')} />
           <button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl border border-slate-700 text-sm font-medium flex items-center justify-center gap-2">
-            <Upload size={16} /> <span className="hidden md:inline">Yükle</span>
+            <Upload size={16} /> <span className="hidden md:inline">Upload</span>
           </button>
           <button onClick={handleDownload} disabled={isDownloading} className="flex-[2] bg-cyan-600 hover:bg-cyan-500 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
             {isDownloading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Download size={16} />}
-            İndir
+            Download
           </button>
         </div>
       </div>
 
-      {/* --- ÖNİZLEME ALANI --- */}
+      {/* --- PREVIEW AREA --- */}
       <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 md:p-8 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
         
-        {/* REFERANS ALAN (Canvas) */}
+        {/* REFERENCE AREA (Canvas) */}
         <div 
           ref={exportRef}
           className="relative transition-all duration-300 ease-out shadow-2xl flex items-center justify-center overflow-hidden"
@@ -270,10 +270,10 @@ export default function SnapPolishApp() {
             maxWidth: '100%',
             maxHeight: '100%',
             aspectRatio: settings.aspectRatio === 'auto' ? 'auto' : settings.aspectRatio,
-            perspective: '1000px', // 3D Tilt için
+            perspective: '1000px', // For 3D Tilt
           }}
         >
-          {/* İçerik Container (Dönüşümler buraya uygulanır) */}
+          {/* Content Container (Transforms applied here) */}
           <div 
             className={`relative transition-all duration-300 ${getShadowClass(settings.shadow)} ${settings.mockup === 'phone' ? 'rounded-[2.5rem] border-[8px] border-slate-900' : 'rounded-lg'}`}
             style={{ 
@@ -303,7 +303,7 @@ export default function SnapPolishApp() {
                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-5 bg-slate-900 rounded-b-xl z-20"></div>
             )}
 
-            {/* Ana Resim */}
+            {/* Main Image */}
             <img 
               src={image} 
               alt="Preview" 
@@ -315,7 +315,7 @@ export default function SnapPolishApp() {
               crossOrigin="anonymous" 
             />
 
-            {/* Filigran (Logo + Text) */}
+            {/* Watermark (Logo + Text) */}
             {settings.showWatermark && (
               <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 transition-all hover:bg-black/60">
                 {settings.watermarkLogo ? (
@@ -329,11 +329,11 @@ export default function SnapPolishApp() {
           </div>
         </div>
 
-        {/* Masaüstü Alt Kontroller */}
+        {/* Desktop Bottom Controls */}
         <div className="hidden md:flex absolute bottom-6 gap-2 bg-slate-800/90 backdrop-blur border border-slate-700 p-2 rounded-xl shadow-xl z-30">
-           <button onClick={toggleSidebar} className={`p-2 text-slate-400 hover:text-white rounded-lg transition ${!showSidebar && 'text-cyan-400 bg-slate-700'}`} title="Paneli Gizle"><Sliders size={18} /></button>
+           <button onClick={toggleSidebar} className={`p-2 text-slate-400 hover:text-white rounded-lg transition ${!showSidebar && 'text-cyan-400 bg-slate-700'}`} title="Hide Panel"><Sliders size={18} /></button>
            <div className="w-px bg-slate-700 my-1"></div>
-           <button onClick={toggleFullscreen} className="p-2 text-slate-400 hover:text-white rounded-lg transition" title="Tam Ekran">{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
+           <button onClick={toggleFullscreen} className="p-2 text-slate-400 hover:text-white rounded-lg transition" title="Fullscreen">{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
         </div>
       </div>
 
