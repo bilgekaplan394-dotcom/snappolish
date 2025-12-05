@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize } from 'lucide-react';
-// html2canvas importunu kaldırdık çünkü CDN üzerinden window objesi ile kullanıyoruz
+import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function SnapPolishApp() {
   // State: Editing Settings
@@ -21,11 +20,9 @@ export default function SnapPolishApp() {
   const [isFullscreen, setIsFullscreen] = useState(false); // Fullscreen state
   
   const fileInputRef = useRef(null);
-  
-  // Reference for download process (Which area to capture?)
   const exportRef = useRef(null);
 
-  // Load html2canvas library from CDN (To prevent build errors)
+  // Load html2canvas
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -77,29 +74,21 @@ export default function SnapPolishApp() {
     }
   };
 
-  // REAL DOWNLOAD FUNCTION
   const handleDownload = async () => {
     if (!exportRef.current) return;
-    
     setIsDownloading(true);
-    
     try {
-      // Check window.html2canvas (Is CDN loaded?)
       if (typeof window.html2canvas === 'undefined') {
         alert('Download tool is loading, please try again in 2 seconds.');
         setIsDownloading(false);
         return;
       }
-
-      // Convert the specified area to image using html2canvas
       const canvas = await window.html2canvas(exportRef.current, {
-        scale: 2, // 2x for Retina quality
-        backgroundColor: null, // Preserve transparency
+        scale: 2,
+        backgroundColor: null,
         logging: false,
-        useCORS: true // For external images (Unsplash etc.)
+        useCORS: true
       });
-
-      // Download the image
       const link = document.createElement('a');
       link.download = 'snappolish-design.png';
       link.href = canvas.toDataURL('image/png');
@@ -112,43 +101,56 @@ export default function SnapPolishApp() {
     }
   };
 
-  // Toggle Sidebar
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
-  // Toggle Fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+      document.documentElement.requestFullscreen().catch(err => console.error(err));
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
+      if (document.exitFullscreen) document.exitFullscreen();
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex flex-col md:flex-row overflow-hidden">
+    // Değişiklik 1: h-screen ve overflow-hidden ile tüm sayfayı sabitledik.
+    // flex-col-reverse ile mobilde panellerin yerini değiştirdik (Kontrol altta, Resim üstte).
+    <div className="h-screen w-full bg-slate-950 text-slate-200 font-sans flex flex-col-reverse md:flex-row overflow-hidden">
       
-      {/* LEFT PANEL: CONTROLS */}
+      {/* LEFT PANEL: CONTROLS (Mobile: Bottom Sheet, Desktop: Sidebar) */}
       <div 
-        className={`bg-slate-900 border-r border-slate-800 flex flex-col h-screen z-20 shadow-2xl transition-all duration-300 ease-in-out ${
-          showSidebar ? 'w-full md:w-80 translate-x-0' : 'w-0 -translate-x-full md:translate-x-0 md:w-0 overflow-hidden opacity-0 border-none'
-        }`}
+        className={`bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col z-30 shadow-2xl transition-all duration-300 ease-in-out
+          ${showSidebar 
+            ? 'h-[45vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' // Mobilde %45 yükseklik
+            : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0' // Mobilde sadece başlık görünür
+          }
+        `}
       >
-        <div className="p-5 border-b border-slate-800 flex items-center gap-2 min-w-[320px]">
-          <div className="bg-gradient-to-tr from-cyan-500 to-blue-500 p-2 rounded-lg text-white">
-            <ImageIcon size={20} />
-          </div>
-          <h1 className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
-            SnapPolish
-          </h1>
+        {/* Mobile Toggle Handle (Sadece mobilde görünür) */}
+        <div 
+          className="md:hidden w-full flex justify-center py-2 bg-slate-800 cursor-pointer"
+          onClick={toggleSidebar}
+        >
+          <div className="w-12 h-1.5 bg-slate-600 rounded-full"></div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-8 custom-scrollbar min-w-[320px]">
+        <div className="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between gap-2 min-w-[320px]">
+          <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-tr from-cyan-500 to-blue-500 p-2 rounded-lg text-white">
+              <ImageIcon size={18} />
+            </div>
+            <h1 className="font-bold text-base md:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
+              SnapPolish
+            </h1>
+          </div>
+          {/* Mobile Collapse Button */}
+          <button onClick={toggleSidebar} className="md:hidden text-slate-400">
+            {showSidebar ? <ChevronDown size={20}/> : <ChevronUp size={20}/>}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-6 md:space-y-8 custom-scrollbar min-w-[320px]">
           <section className="space-y-3">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
               <Palette size={14} /> Background
@@ -225,7 +227,7 @@ export default function SnapPolishApp() {
           </div>
         </div>
 
-        <div className="p-5 border-t border-slate-800 bg-slate-900 min-w-[320px]">
+        <div className="p-4 md:p-5 border-t border-slate-800 bg-slate-900 min-w-[320px]">
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
           <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl border border-slate-700 transition-all mb-3 text-sm font-medium">
             <Upload size={16} /> Upload Image
@@ -247,9 +249,10 @@ export default function SnapPolishApp() {
       </div>
 
       {/* RIGHT PANEL: PREVIEW */}
-      <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center p-8 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
+      <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 md:p-8 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
         
         {/* EXPORT REF WRAPPER */}
+        {/* Değişiklik 2: Mobilde resmin çok büyük olmasını engellemek için max-h-[50vh] ekledik. */}
         <div 
           ref={exportRef}
           className="relative transition-all duration-300 ease-out shadow-2xl flex items-center justify-center"
@@ -257,7 +260,7 @@ export default function SnapPolishApp() {
             background: settings.background,
             padding: `${settings.padding}px`,
             maxWidth: '100%',
-            maxHeight: '90vh',
+            maxHeight: '100%',
           }}
         >
           <div 
@@ -265,28 +268,28 @@ export default function SnapPolishApp() {
             style={{ borderRadius: `${settings.borderRadius}px` }}
           >
             {settings.windowControls && (
-              <div className={`h-8 px-4 flex items-center gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
-                <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
-                <div className={`ml-4 flex-1 h-5 rounded-md flex items-center px-2 opacity-30 text-[10px] ${settings.darkMode ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-800'}`}>
+              <div className={`h-6 md:h-8 px-2 md:px-4 flex items-center gap-1.5 md:gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-rose-500"></div>
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-amber-400"></div>
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-400"></div>
+                <div className={`ml-2 md:ml-4 flex-1 h-4 md:h-5 rounded-md flex items-center px-2 opacity-30 text-[8px] md:text-[10px] ${settings.darkMode ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-800'}`}>
                   snappolish.com
                 </div>
               </div>
             )}
 
-            <img src={image} alt="Preview" className="max-w-full max-h-[60vh] object-contain block" crossOrigin="anonymous" />
+            <img src={image} alt="Preview" className="max-w-full max-h-[40vh] md:max-h-[60vh] object-contain block" crossOrigin="anonymous" />
 
-            <div className="absolute bottom-4 right-4 opacity-30 hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white">
+            <div className="absolute bottom-2 md:bottom-4 right-2 md:right-4 opacity-30 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[8px] md:text-[10px] font-bold text-white">
                  <Monitor size={10} /> SnapPolish
               </div>
             </div>
           </div>
         </div>
 
-        {/* BOTTOM CONTROL BAR */}
-        <div className="absolute bottom-6 flex gap-2 bg-slate-800/80 backdrop-blur border border-slate-700 p-1.5 rounded-lg shadow-xl z-30">
+        {/* BOTTOM CONTROL BAR - Desktop Only */}
+        <div className="hidden md:flex absolute bottom-6 gap-2 bg-slate-800/80 backdrop-blur border border-slate-700 p-1.5 rounded-lg shadow-xl z-30">
            <button 
              onClick={toggleSidebar}
              className={`p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors ${!showSidebar && 'text-cyan-400 bg-slate-700'}`}
