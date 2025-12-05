@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp, Box, Move, Type, Smartphone, LayoutTemplate, Aperture, Sticker, Wand2, Sun, EyeOff, AlignStartVertical, AlignEndVertical, AlignStartHorizontal, AlignEndHorizontal, Globe } from 'lucide-react';
 
-// NOT: html-to-image yerine CDN üzerinden html2canvas kullanıyoruz çünkü kurulum gerektirmez ve daha stabildir.
-
 export default function SnapPolishApp() {
-  // State: All Settings
   const [settings, setSettings] = useState({
-    padding: 60, // Padding varsayılanı artırıldı
+    padding: 60,
     shadow: 3, 
     borderRadius: 16,
     background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
@@ -19,12 +16,10 @@ export default function SnapPolishApp() {
     scale: 100,
     rotate: 0,
     tilt: 0,
-    // Image Filters
     brightness: 100,
     contrast: 100,
     blur: 0,
     grayscale: 0,
-    // Branding & Overlay
     showWatermark: true,
     watermarkText: 'SnapPolish',
     watermarkLogo: null,
@@ -36,7 +31,7 @@ export default function SnapPolishApp() {
     aspectRatio: 'auto',
   });
 
-  const [image, setImage] = useState("https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+  const [image, setImage] = useState("https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80");
   const [activeTab, setActiveTab] = useState('layout'); 
   const [showProModal, setShowProModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -48,26 +43,21 @@ export default function SnapPolishApp() {
   const logoInputRef = useRef(null);
   const exportRef = useRef(null);
 
-  // html2canvas kütüphanesini CDN'den yükle (Build hatasını önlemek için)
+  // İndirme aracını yükle (Kurulumsuz çalışması için)
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     script.async = true;
     document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
+    return () => { document.body.removeChild(script); };
   }, []);
 
-  // Fullscreen listener
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Presets
   const applyPreset = (type) => {
     switch(type) {
       case 'minimal':
@@ -104,9 +94,7 @@ export default function SnapPolishApp() {
     if (settings.bgType === 'image' && settings.customBackground) {
       return { background: `url(${settings.customBackground}) center/cover` };
     }
-    
     let baseBg = settings.background;
-    
     if (settings.pattern === 'dots') {
       return { 
         backgroundColor: settings.background.includes('gradient') ? '#f8fafc' : settings.background,
@@ -121,7 +109,6 @@ export default function SnapPolishApp() {
         backgroundSize: '20px 20px' 
       };
     }
-    
     return { background: baseBg };
   };
 
@@ -131,55 +118,47 @@ export default function SnapPolishApp() {
       color: settings.badgeTextColor,
       transform: `rotate(${settings.badgeRotation}deg)`,
     };
-
     switch (settings.badgePosition) {
-      case 'top-left':
-        return { ...style, top: '1rem', left: '1rem' };
-      case 'top-right':
-        return { ...style, top: '1rem', right: '1rem' };
-      case 'bottom-left':
-        return { ...style, bottom: '1rem', left: '1rem' };
-      case 'bottom-right':
-        return { ...style, bottom: '1rem', right: '1rem' };
-      default:
-        return { ...style, top: '1rem', right: '1rem' };
+      case 'top-left': return { ...style, top: '1rem', left: '1rem' };
+      case 'top-right': return { ...style, top: '1rem', right: '1rem' };
+      case 'bottom-left': return { ...style, bottom: '1rem', left: '1rem' };
+      case 'bottom-right': return { ...style, bottom: '1rem', right: '1rem' };
+      default: return { ...style, top: '1rem', right: '1rem' };
     }
   };
 
-  // İNDİRME FONKSİYONU (html2canvas CDN kullanarak)
+  // İNDİRME FONKSİYONU - 4K Kalite Ayarlı
   const handleDownload = async () => {
     if (!exportRef.current) return;
     setIsDownloading(true);
     
     try {
-      // CDN'in yüklenip yüklenmediğini kontrol et
       if (typeof window.html2canvas === 'undefined') {
-        alert('İndirme aracı yükleniyor, lütfen 2 saniye bekleyip tekrar deneyin.');
+        alert('İndirme aracı hazırlanıyor, lütfen 3 saniye sonra tekrar deneyin.');
         setIsDownloading(false);
         return;
       }
 
-      // Fontların ve görsellerin oturması için kısa bekleme
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Fontların ve görsellerin tam yüklenmesi için bekleme
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await window.html2canvas(exportRef.current, {
-        scale: 3, // 3x Kalite (4K'ya yakın)
+        scale: 4, // 4x Ölçekleme (4K Kalite)
         backgroundColor: null,
         logging: false,
-        useCORS: true, // Dış kaynaklı resimler için
+        useCORS: true,
         allowTaint: true,
-        // 3D transformlar html2canvas'ta tam desteklenmeyebilir, ancak en iyi sonucu almaya çalışır
-        ignoreElements: (element) => element.id === 'ignore-me' 
+        width: exportRef.current.offsetWidth,
+        height: exportRef.current.offsetHeight
       });
 
       const link = document.createElement('a');
-      link.download = 'snappolish-design.png';
-      link.href = canvas.toDataURL('image/png');
+      link.download = 'snappolish-4k.png';
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
-
     } catch (error) {
       console.error("İndirme hatası:", error);
-      alert("Görsel oluşturulurken bir hata meydana geldi. Lütfen tekrar deneyin.");
+      alert("Hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsDownloading(false);
     }
@@ -193,30 +172,24 @@ export default function SnapPolishApp() {
   return (
     <div className="h-screen w-full bg-slate-950 text-slate-200 font-sans flex flex-col-reverse md:flex-row overflow-hidden">
       
-      {/* --- CONTROL PANEL --- */}
+      {/* --- KONTROL PANELİ --- */}
       <div className={`bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col z-30 shadow-2xl transition-all duration-300 ease-in-out ${showSidebar ? 'h-[55vh] md:h-screen w-full md:w-80' : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-0'}`}>
         
-        {/* Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2 min-w-[320px]">
           <div className="flex items-center gap-2">
             <div className="bg-gradient-to-tr from-cyan-500 to-blue-500 p-2 rounded-lg text-white"><ImageIcon size={18} /></div>
-            <h1 className="font-bold text-base md:text-lg">SnapPolish <span className="text-xs font-normal text-cyan-400 bg-cyan-950 px-1.5 py-0.5 rounded ml-1">v2.1</span></h1>
+            <h1 className="font-bold text-base md:text-lg">SnapPolish <span className="text-xs font-normal text-cyan-400 bg-cyan-950 px-1.5 py-0.5 rounded ml-1">v3.1 (Ultra HD)</span></h1>
           </div>
           <button onClick={() => setShowSidebar(!showSidebar)} className="md:hidden text-slate-400"><ChevronDown size={20}/></button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-slate-800 min-w-[320px]">
           {['layout', 'style', 'branding'].map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === tab ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>
-              {tab}
-            </button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === tab ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300'}`}>{tab}</button>
           ))}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar min-w-[320px]">
-          
-          {/* TAB: LAYOUT */}
           {activeTab === 'layout' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
               <section className="space-y-3">
@@ -227,7 +200,6 @@ export default function SnapPolishApp() {
                   <button onClick={() => applyPreset('pro')} className="p-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 text-amber-500 rounded-lg text-xs hover:bg-amber-500/30 transition">Pro</button>
                 </div>
               </section>
-
               <section className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Smartphone size={14} /> Frame Type</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -235,21 +207,13 @@ export default function SnapPolishApp() {
                     <button key={m} onClick={() => setSettings({...settings, mockup: m})} className={`p-2 rounded-lg text-xs border capitalize ${settings.mockup === m ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>{m}</button>
                   ))}
                 </div>
-                {/* Browser Text Input */}
                 {settings.mockup === 'browser' && (
                   <div className="mt-3 bg-slate-800/50 p-2 rounded-lg border border-slate-800">
                     <label className="text-[10px] text-slate-400 block mb-1 flex items-center gap-1"><Globe size={10} /> Browser URL</label>
-                    <input 
-                      type="text" 
-                      value={settings.browserText} 
-                      onChange={(e) => setSettings({...settings, browserText: e.target.value})} 
-                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500 transition-colors"
-                      placeholder="yoursite.com"
-                    />
+                    <input type="text" value={settings.browserText} onChange={(e) => setSettings({...settings, browserText: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500 transition-colors" placeholder="yoursite.com"/>
                   </div>
                 )}
               </section>
-
               <section className="space-y-4">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><LayoutTemplate size={14} /> Size & Padding</label>
                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
@@ -266,7 +230,6 @@ export default function SnapPolishApp() {
                   <input type="range" min="50" max="150" value={settings.scale} onChange={(e) => setSettings({...settings, scale: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
                 </div>
               </section>
-
               <section className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Move size={14} /> 3D Transform</label>
                 <div className="grid grid-cols-2 gap-4">
@@ -283,7 +246,6 @@ export default function SnapPolishApp() {
             </div>
           )}
 
-          {/* TAB: STYLE */}
           {activeTab === 'style' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <section className="space-y-3">
@@ -303,7 +265,6 @@ export default function SnapPolishApp() {
                    <button onClick={() => setSettings({...settings, pattern: 'none'})} className="flex-1 text-[10px] py-1 border border-slate-700 rounded bg-slate-800 text-slate-400 hover:text-white">Solid</button>
                 </div>
               </section>
-
               <section className="space-y-4">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Wand2 size={14} /> Image Tuning</label>
                 <div className="space-y-3 p-3 bg-slate-800/50 rounded-xl border border-slate-800">
@@ -321,7 +282,6 @@ export default function SnapPolishApp() {
                   </div>
                 </div>
               </section>
-              
               <div className="grid grid-cols-2 gap-2">
                  <button onClick={() => setSettings(s => ({...s, darkMode: !s.darkMode}))} className={`p-2 rounded border text-xs flex items-center justify-center gap-2 ${settings.darkMode ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400'}`}><Monitor size={14}/> Dark Mode</button>
                  <button onClick={() => setSettings(s => ({...s, windowControls: !s.windowControls}))} className={`p-2 rounded border text-xs flex items-center justify-center gap-2 ${settings.windowControls ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400'}`}><Box size={14}/> Controls</button>
@@ -329,7 +289,6 @@ export default function SnapPolishApp() {
             </div>
           )}
 
-          {/* TAB: BRANDING */}
           {activeTab === 'branding' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
               <section className="space-y-3">
@@ -347,12 +306,10 @@ export default function SnapPolishApp() {
                    </div>
                  )}
               </section>
-
               <section className="space-y-3">
                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Type size={14} /> Promo Badge <span className="text-[10px] bg-amber-500/20 text-amber-500 px-1 rounded ml-1">NEW</span></label>
                  <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-3">
                     <input type="text" value={settings.badgeText} onChange={(e) => setSettings({...settings, badgeText: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 outline-none" placeholder="e.g. NEW FEATURE" />
-                    
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] text-slate-400">Position</label>
                       <div className="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-lg">
@@ -366,13 +323,10 @@ export default function SnapPolishApp() {
                         ))}
                       </div>
                     </div>
-
                     <div>
                       <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>Rotation</span><span>{settings.badgeRotation}°</span></div>
                       <input type="range" min="-45" max="45" value={settings.badgeRotation} onChange={(e) => setSettings({...settings, badgeRotation: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-700 rounded-lg accent-amber-400" />
                     </div>
-
-                    {/* Badge Color Picker */}
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] text-slate-400">Background Color</label>
@@ -385,7 +339,6 @@ export default function SnapPolishApp() {
                           </div>
                         </div>
                       </div>
-
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] text-slate-400">Text Color</label>
                         <div className="flex items-center gap-2">
@@ -398,15 +351,12 @@ export default function SnapPolishApp() {
                         </div>
                       </div>
                     </div>
-
                  </div>
               </section>
             </div>
           )}
-
         </div>
 
-        {/* Footer Actions */}
         <div className="p-4 border-t border-slate-800 bg-slate-900 min-w-[320px] flex gap-2">
           <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'main')} />
           <button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl border border-slate-700 text-sm font-medium flex items-center justify-center gap-2">
@@ -446,11 +396,9 @@ export default function SnapPolishApp() {
               overflow: 'hidden'
             }}
           >
-            {/* Header / Notch */}
             {settings.mockup === 'browser' && (
               <div className={`h-6 md:h-8 px-3 flex items-center gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
                 <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div><div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div></div>
-                {/* Browser URL Display */}
                 <div className={`ml-2 flex-1 h-4 rounded flex items-center px-2 opacity-40 text-[8px] md:text-[10px] ${settings.darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
                   {settings.browserText}
                 </div>
@@ -458,17 +406,12 @@ export default function SnapPolishApp() {
             )}
             {settings.mockup === 'phone' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-5 bg-slate-900 rounded-b-xl z-20"></div>}
 
-            {/* Badge Overlay */}
             {settings.badgeText && (
-              <div 
-                className="absolute z-30 px-3 py-1 rounded-full text-xs font-bold shadow-lg transition-all" 
-                style={getBadgeStyle()}
-              >
+              <div className="absolute z-30 px-3 py-1 rounded-full text-xs font-bold shadow-lg transition-all" style={getBadgeStyle()}>
                 {settings.badgeText}
               </div>
             )}
 
-            {/* Image */}
             <img 
               src={image} 
               alt="Preview" 
@@ -481,7 +424,6 @@ export default function SnapPolishApp() {
               crossOrigin="anonymous" 
             />
 
-            {/* Watermark */}
             {settings.showWatermark && (
               <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                 {settings.watermarkLogo ? <img src={settings.watermarkLogo} alt="Logo" className="w-4 h-4 rounded-full object-cover" /> : <Monitor size={12} className="text-white" />}
@@ -491,7 +433,6 @@ export default function SnapPolishApp() {
           </div>
         </div>
 
-        {/* Desktop Bottom Bar */}
         <div className="hidden md:flex absolute bottom-6 gap-2 bg-slate-800/90 backdrop-blur border border-slate-700 p-2 rounded-xl shadow-xl z-30">
            <button onClick={() => setShowSidebar(!showSidebar)} className={`p-2 text-slate-400 hover:text-white rounded-lg transition ${!showSidebar && 'text-cyan-400 bg-slate-700'}`}><Sliders size={18} /></button>
            <div className="w-px bg-slate-700 my-1"></div>
