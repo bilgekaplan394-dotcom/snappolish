@@ -1,80 +1,86 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp, Box, Move, Type } from 'lucide-react';
+import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp, Box, Move, Type, Smartphone, LayoutTemplate, Aperture, Sticker } from 'lucide-react';
 
 export default function SnapPolishApp() {
-  // State: Editing Settings
+  // State: Tüm Ayarlar
   const [settings, setSettings] = useState({
     padding: 40,
     shadow: 3, 
     borderRadius: 16,
     background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-    windowControls: true,
+    customBackground: null, // Özel arka plan resmi
+    mockup: 'browser', // 'browser', 'phone', 'none'
     darkMode: true,
-    scale: 100, // Resim ölçeği (%)
-    rotate: 0,  // Döndürme (derece)
-    tilt: 0,    // 3D Eğim (derece)
-    showWatermark: true // Filigran görünürlüğü
+    scale: 100,
+    rotate: 0,
+    tilt: 0,
+    showWatermark: true,
+    watermarkText: 'SnapPolish',
+    watermarkLogo: null, // Filigran logosu
+    aspectRatio: 'auto', // 'auto', '1/1', '16/9', '4/5', '9/16'
   });
 
   const [image, setImage] = useState("https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
   const [showProModal, setShowProModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true); // Sidebar visibility state
-  const [isFullscreen, setIsFullscreen] = useState(false); // Fullscreen state
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const fileInputRef = useRef(null);
+  const bgInputRef = useRef(null);
+  const logoInputRef = useRef(null);
   const exportRef = useRef(null);
 
-  // Load html2canvas
+  // html2canvas yükle
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     script.async = true;
     document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
+    return () => { document.body.removeChild(script); };
   }, []);
 
-  // Listen for fullscreen changes
+  // Tam ekran dinleyici
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Background Options
-  const backgrounds = [
-    { id: 'grad1', value: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', name: 'Indigo' },
-    { id: 'grad2', value: 'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)', name: 'Sunset' },
-    { id: 'grad3', value: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)', name: 'Ocean' },
-    { id: 'grad4', value: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', name: 'Dark' },
-    { id: 'flat1', value: '#e2e8f0', name: 'Clean' },
-    { id: 'mesh', value: 'radial-gradient(at 40% 20%, hsla(28,100%,74%,1) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%)', name: 'Mesh', pro: true },
-  ];
+  // Hazır Şablonlar (Presets)
+  const applyPreset = (type) => {
+    switch(type) {
+      case 'minimal':
+        setSettings(prev => ({...prev, padding: 60, shadow: 1, borderRadius: 8, background: '#f1f5f9', mockup: 'none', rotate: 0, tilt: 0}));
+        break;
+      case 'social':
+        setSettings(prev => ({...prev, padding: 40, shadow: 4, borderRadius: 24, aspectRatio: '4/5', mockup: 'phone', background: 'linear-gradient(to right, #ec4899, #8b5cf6)', rotate: -2, tilt: 0}));
+        break;
+      case 'pro':
+        setSettings(prev => ({...prev, padding: 50, shadow: 5, borderRadius: 12, mockup: 'browser', darkMode: true, background: 'linear-gradient(to bottom right, #1e293b, #0f172a)', rotate: 0, tilt: 5}));
+        break;
+    }
+  };
 
-  const handleImageUpload = (e) => {
+  // Resim Yükleme Yardımcısı
+  const handleUpload = (e, targetState) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => setImage(e.target.result);
+      reader.onload = (e) => {
+        if (targetState === 'main') setImage(e.target.result);
+        if (targetState === 'bg') setSettings(s => ({ ...s, customBackground: e.target.result }));
+        if (targetState === 'logo') setSettings(s => ({ ...s, watermarkLogo: e.target.result }));
+      };
       reader.readAsDataURL(file);
     }
   };
 
   const getShadowClass = (level) => {
-    switch(level) {
-      case 0: return 'shadow-none';
-      case 1: return 'shadow-sm';
-      case 2: return 'shadow-md';
-      case 3: return 'shadow-xl';
-      case 4: return 'shadow-2xl';
-      case 5: return 'shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)]';
-      default: return 'shadow-xl';
-    }
+    const shadows = [
+      'shadow-none', 'shadow-sm', 'shadow-md', 'shadow-xl', 'shadow-2xl', 'shadow-[0_35px_60px_-15px_rgba(0,0,0,0.6)]'
+    ];
+    return shadows[level] || shadows[3];
   };
 
   const handleDownload = async () => {
@@ -82,7 +88,7 @@ export default function SnapPolishApp() {
     setIsDownloading(true);
     try {
       if (typeof window.html2canvas === 'undefined') {
-        alert('Download tool is loading, please try again in 2 seconds.');
+        alert('İndirme aracı yükleniyor, lütfen bekleyin...');
         setIsDownloading(false);
         return;
       }
@@ -90,7 +96,8 @@ export default function SnapPolishApp() {
         scale: 2,
         backgroundColor: null,
         logging: false,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true
       });
       const link = document.createElement('a');
       link.download = 'snappolish-design.png';
@@ -98,282 +105,238 @@ export default function SnapPolishApp() {
       link.click();
     } catch (error) {
       console.error("Download error:", error);
-      alert("An error occurred. Please try again.");
+      alert("Hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const toggleSidebar = () => {
-    setShowSidebar(!showSidebar);
-  };
-
+  const toggleSidebar = () => setShowSidebar(!showSidebar);
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => console.error(err));
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(console.error);
+    else if (document.exitFullscreen) document.exitFullscreen();
   };
 
   return (
     <div className="h-screen w-full bg-slate-950 text-slate-200 font-sans flex flex-col-reverse md:flex-row overflow-hidden">
       
-      {/* LEFT PANEL: CONTROLS */}
+      {/* --- KONTROL PANELİ --- */}
       <div 
         className={`bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col z-30 shadow-2xl transition-all duration-300 ease-in-out
-          ${showSidebar 
-            ? 'h-[45vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' 
-            : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0'
-          }
+          ${showSidebar ? 'h-[50vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0'}
         `}
       >
-        <div 
-          className="md:hidden w-full flex justify-center py-2 bg-slate-800 cursor-pointer"
-          onClick={toggleSidebar}
-        >
+        {/* Mobil Tutamaç */}
+        <div className="md:hidden w-full flex justify-center py-2 bg-slate-800 cursor-pointer" onClick={toggleSidebar}>
           <div className="w-12 h-1.5 bg-slate-600 rounded-full"></div>
         </div>
 
-        <div className="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between gap-2 min-w-[320px]">
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2 min-w-[320px]">
           <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-tr from-cyan-500 to-blue-500 p-2 rounded-lg text-white">
-              <ImageIcon size={18} />
-            </div>
-            <h1 className="font-bold text-base md:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
-              SnapPolish
-            </h1>
+            <div className="bg-gradient-to-tr from-cyan-500 to-blue-500 p-2 rounded-lg text-white"><ImageIcon size={18} /></div>
+            <h1 className="font-bold text-base md:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">SnapPolish</h1>
           </div>
           <button onClick={toggleSidebar} className="md:hidden text-slate-400">
             {showSidebar ? <ChevronDown size={20}/> : <ChevronUp size={20}/>}
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-6 md:space-y-8 custom-scrollbar min-w-[320px]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar min-w-[320px]">
+          
+          {/* 1. Hazır Şablonlar */}
           <section className="space-y-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <Palette size={14} /> Background
-            </label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Aperture size={14} /> Şablonlar</label>
             <div className="grid grid-cols-3 gap-2">
-              {backgrounds.map((bg) => (
-                <button
-                  key={bg.id}
-                  onClick={() => bg.pro ? setShowProModal(true) : setSettings({...settings, background: bg.value})}
-                  className={`h-10 rounded-lg border-2 transition-all relative overflow-hidden group ${settings.background === bg.value ? 'border-cyan-500 ring-2 ring-cyan-500/20' : 'border-transparent hover:border-slate-600'}`}
-                  style={{ background: bg.value }}
-                >
-                  {bg.pro && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Crown size={14} className="text-amber-400" />
-                    </div>
-                  )}
-                </button>
+              <button onClick={() => applyPreset('minimal')} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs hover:bg-slate-700 transition">Minimal</button>
+              <button onClick={() => applyPreset('social')} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs hover:bg-slate-700 transition">Social</button>
+              <button onClick={() => applyPreset('pro')} className="p-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 text-amber-500 rounded-lg text-xs hover:bg-amber-500/30 transition">Pro</button>
+            </div>
+          </section>
+
+          {/* 2. Arka Plan */}
+          <section className="space-y-3">
+            <div className="flex justify-between">
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Palette size={14} /> Arka Plan</label>
+               <button onClick={() => bgInputRef.current?.click()} className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1">+ Özel Resim</button>
+               <input type="file" ref={bgInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'bg')} />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)',
+                'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
+                '#1e293b',
+              ].map((bg, i) => (
+                <button key={i} onClick={() => setSettings({...settings, background: bg, customBackground: null})} className="h-8 rounded-md border border-slate-600 hover:scale-105 transition" style={{ background: bg }} />
               ))}
             </div>
           </section>
 
-          <section className="space-y-4">
-             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <Layers size={14} /> Layout
-            </label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Padding</span>
-                <span>{settings.padding}px</span>
-              </div>
-              <input type="range" min="0" max="120" value={settings.padding} onChange={(e) => setSettings({...settings, padding: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Border Radius</span>
-                <span>{settings.borderRadius}px</span>
-              </div>
-              <input type="range" min="0" max="40" value={settings.borderRadius} onChange={(e) => setSettings({...settings, borderRadius: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+          {/* 3. Çerçeve & Mockup */}
+          <section className="space-y-3">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Smartphone size={14} /> Çerçeve</label>
+            <div className="grid grid-cols-3 gap-2">
+               <button onClick={() => setSettings({...settings, mockup: 'browser'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'browser' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Browser</button>
+               <button onClick={() => setSettings({...settings, mockup: 'phone'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'phone' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Phone</button>
+               <button onClick={() => setSettings({...settings, mockup: 'none'})} className={`p-2 rounded-lg text-xs border ${settings.mockup === 'none' ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>Yok</button>
             </div>
           </section>
 
-          {/* New Section: Transform */}
+          {/* 4. Boyut & Yerleşim */}
           <section className="space-y-4">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <Move size={14} /> Transform
-            </label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Scale</span>
-                <span>{settings.scale}%</span>
-              </div>
-              <input type="range" min="50" max="150" value={settings.scale} onChange={(e) => setSettings({...settings, scale: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Rotate</span>
-                <span>{settings.rotate}°</span>
-              </div>
-              <input type="range" min="-15" max="15" value={settings.rotate} onChange={(e) => setSettings({...settings, rotate: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>3D Tilt</span>
-                <span>{settings.tilt}°</span>
-              </div>
-              <input type="range" min="-20" max="20" value={settings.tilt} onChange={(e) => setSettings({...settings, tilt: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <Sliders size={14} /> Effects & Options
-            </label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Shadow</span>
-                <span>{settings.shadow}</span>
-              </div>
-              <input type="range" min="0" max="5" value={settings.shadow} onChange={(e) => setSettings({...settings, shadow: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
-            </div>
-             <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={() => setSettings({...settings, windowControls: !settings.windowControls})} 
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${settings.windowControls ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
-                >
-                  <Box size={18} />
-                  <span className="text-xs font-medium">Controls</span>
-                </button>
-                <button 
-                  onClick={() => setSettings({...settings, darkMode: !settings.darkMode})} 
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${settings.darkMode ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
-                >
-                  <Monitor size={18} />
-                  <span className="text-xs font-medium">Dark Mode</span>
-                </button>
-                <button 
-                  onClick={() => setSettings({...settings, showWatermark: !settings.showWatermark})} 
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all col-span-2 ${settings.showWatermark ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
-                >
-                  <Type size={18} />
-                  <span className="text-xs font-medium">Watermark</span>
-                </button>
+             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><LayoutTemplate size={14} /> Boyutlar</label>
+             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {['auto', '1/1', '16/9', '4/5', '9/16'].map(ratio => (
+                  <button 
+                    key={ratio}
+                    onClick={() => setSettings({...settings, aspectRatio: ratio})}
+                    className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap border ${settings.aspectRatio === ratio ? 'bg-cyan-500 text-white border-cyan-500' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                  >
+                    {ratio === 'auto' ? 'Auto' : ratio}
+                  </button>
+                ))}
+             </div>
+             
+             <div className="space-y-1">
+               <div className="flex justify-between text-xs text-slate-400"><span>Dolgu</span><span>{settings.padding}px</span></div>
+               <input type="range" min="0" max="150" value={settings.padding} onChange={(e) => setSettings({...settings, padding: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
              </div>
           </section>
 
-          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <Crown size={16} className="text-amber-500" />
-              <h4 className="font-bold text-amber-500 text-sm">SnapPolish Pro</h4>
+          {/* 5. Markalama (Filigran) */}
+          <section className="space-y-3">
+             <div className="flex justify-between items-center">
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Sticker size={14} /> Filigran</label>
+               <input type="checkbox" checked={settings.showWatermark} onChange={() => setSettings(s => ({...s, showWatermark: !s.showWatermark}))} className="accent-cyan-500" />
+             </div>
+             
+             {settings.showWatermark && (
+               <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-3">
+                 <input 
+                   type="text" 
+                   value={settings.watermarkText} 
+                   onChange={(e) => setSettings({...settings, watermarkText: e.target.value})}
+                   className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 focus:border-cyan-500 outline-none"
+                   placeholder="Marka Adınız"
+                 />
+                 <div className="flex items-center gap-2">
+                   <button onClick={() => logoInputRef.current?.click()} className="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1.5 rounded text-slate-300 transition">Logo Yükle</button>
+                   {settings.watermarkLogo && <button onClick={() => setSettings({...settings, watermarkLogo: null})} className="text-rose-400 p-1"><X size={14}/></button>}
+                   <input type="file" ref={logoInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'logo')} />
+                 </div>
+               </div>
+             )}
+          </section>
+
+          {/* 6. Transform & Efektler */}
+          <section className="space-y-4">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"><Move size={14} /> Efektler</label>
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <span className="text-[10px] text-slate-400 block mb-1">Döndür ({settings.rotate}°)</span>
+                 <input type="range" min="-20" max="20" value={settings.rotate} onChange={(e) => setSettings({...settings, rotate: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
+               </div>
+               <div>
+                 <span className="text-[10px] text-slate-400 block mb-1">Eğim ({settings.tilt}°)</span>
+                 <input type="range" min="-20" max="20" value={settings.tilt} onChange={(e) => setSettings({...settings, tilt: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg accent-cyan-500" />
+               </div>
             </div>
-            <p className="text-xs text-slate-400 mb-3">All features unlocked for testing.</p>
-          </div>
+          </section>
+
         </div>
 
-        <div className="p-4 md:p-5 border-t border-slate-800 bg-slate-900 min-w-[320px]">
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-          <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl border border-slate-700 transition-all mb-3 text-sm font-medium">
-            <Upload size={16} /> Upload Image
+        <div className="p-4 border-t border-slate-800 bg-slate-900 min-w-[320px] flex gap-2">
+          <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'main')} />
+          <button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl border border-slate-700 text-sm font-medium flex items-center justify-center gap-2">
+            <Upload size={16} /> <span className="hidden md:inline">Yükle</span>
           </button>
-          
-          <button 
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white py-3 rounded-xl shadow-lg shadow-cyan-900/20 transition-all font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isDownloading ? (
-               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-               <Download size={16} />
-            )}
-            {isDownloading ? 'Preparing...' : 'Download Image'}
+          <button onClick={handleDownload} disabled={isDownloading} className="flex-[2] bg-cyan-600 hover:bg-cyan-500 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
+            {isDownloading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Download size={16} />}
+            İndir
           </button>
         </div>
       </div>
 
-      {/* RIGHT PANEL: PREVIEW */}
+      {/* --- ÖNİZLEME ALANI --- */}
       <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 md:p-8 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
         
-        {/* EXPORT REF WRAPPER */}
+        {/* REFERANS ALAN (Canvas) */}
         <div 
           ref={exportRef}
-          className="relative transition-all duration-300 ease-out shadow-2xl flex items-center justify-center"
+          className="relative transition-all duration-300 ease-out shadow-2xl flex items-center justify-center overflow-hidden"
           style={{ 
-            background: settings.background,
+            background: settings.customBackground ? `url(${settings.customBackground}) center/cover` : settings.background,
             padding: `${settings.padding}px`,
             maxWidth: '100%',
             maxHeight: '100%',
-            // Container içinde perspektif
-            perspective: '1000px',
-            overflow: 'visible' 
+            aspectRatio: settings.aspectRatio === 'auto' ? 'auto' : settings.aspectRatio,
+            perspective: '1000px', // 3D Tilt için
           }}
         >
+          {/* İçerik Container (Dönüşümler buraya uygulanır) */}
           <div 
-            className={`relative overflow-hidden transition-all duration-300 ${getShadowClass(settings.shadow)} ${settings.darkMode ? 'bg-slate-900' : 'bg-white'}`}
+            className={`relative transition-all duration-300 ${getShadowClass(settings.shadow)} ${settings.mockup === 'phone' ? 'rounded-[2.5rem] border-[8px] border-slate-900' : 'rounded-lg'}`}
             style={{ 
-              borderRadius: `${settings.borderRadius}px`,
-              // Transform değerlerini uygula
+              borderRadius: settings.mockup === 'phone' ? '2.5rem' : `${settings.borderRadius}px`,
               transform: `scale(${settings.scale / 100}) rotate(${settings.rotate}deg) rotateX(${settings.tilt}deg) rotateY(${settings.tilt / 2}deg)`,
-              transformStyle: 'preserve-3d'
+              transformStyle: 'preserve-3d',
+              backgroundColor: settings.mockup === 'none' ? 'transparent' : (settings.darkMode ? '#0f172a' : '#ffffff'),
+              overflow: 'hidden'
             }}
           >
-            {settings.windowControls && (
-              <div className={`h-6 md:h-8 px-2 md:px-4 flex items-center gap-1.5 md:gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
-                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-rose-500"></div>
-                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-amber-400"></div>
-                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-400"></div>
-                <div className={`ml-2 md:ml-4 flex-1 h-4 md:h-5 rounded-md flex items-center px-2 opacity-30 text-[8px] md:text-[10px] ${settings.darkMode ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-800'}`}>
+            {/* 1. Browser Mockup Header */}
+            {settings.mockup === 'browser' && (
+              <div className={`h-6 md:h-8 px-3 flex items-center gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                </div>
+                <div className={`ml-2 flex-1 h-4 rounded flex items-center px-2 opacity-40 text-[8px] md:text-[10px] ${settings.darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
                   snappolish.com
                 </div>
               </div>
             )}
 
-            <img src={image} alt="Preview" className="max-w-full max-h-[40vh] md:max-h-[60vh] object-contain block" crossOrigin="anonymous" />
+            {/* 2. Phone Mockup Notch */}
+            {settings.mockup === 'phone' && (
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-5 bg-slate-900 rounded-b-xl z-20"></div>
+            )}
 
+            {/* Ana Resim */}
+            <img 
+              src={image} 
+              alt="Preview" 
+              className="max-w-full object-contain block" 
+              style={{
+                maxHeight: settings.aspectRatio !== 'auto' ? '100%' : '60vh',
+                minWidth: settings.mockup === 'phone' ? '280px' : 'auto'
+              }}
+              crossOrigin="anonymous" 
+            />
+
+            {/* Filigran (Logo + Text) */}
             {settings.showWatermark && (
-              <div className="absolute bottom-2 md:bottom-4 right-2 md:right-4 opacity-30 hover:opacity-100 transition-opacity">
-                <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[8px] md:text-[10px] font-bold text-white">
-                  <Monitor size={10} /> SnapPolish
-                </div>
+              <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 transition-all hover:bg-black/60">
+                {settings.watermarkLogo ? (
+                  <img src={settings.watermarkLogo} alt="Logo" className="w-4 h-4 rounded-full object-cover" />
+                ) : (
+                  <Monitor size={12} className="text-white" />
+                )}
+                <span className="text-[10px] md:text-xs font-bold text-white shadow-sm">{settings.watermarkText}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* BOTTOM CONTROL BAR - Desktop Only */}
-        <div className="hidden md:flex absolute bottom-6 gap-2 bg-slate-800/80 backdrop-blur border border-slate-700 p-1.5 rounded-lg shadow-xl z-30">
-           <button 
-             onClick={toggleSidebar}
-             className={`p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors ${!showSidebar && 'text-cyan-400 bg-slate-700'}`}
-             title={showSidebar ? "Hide Settings" : "Show Settings"}
-           >
-             <Sliders size={16} />
-           </button>
+        {/* Masaüstü Alt Kontroller */}
+        <div className="hidden md:flex absolute bottom-6 gap-2 bg-slate-800/90 backdrop-blur border border-slate-700 p-2 rounded-xl shadow-xl z-30">
+           <button onClick={toggleSidebar} className={`p-2 text-slate-400 hover:text-white rounded-lg transition ${!showSidebar && 'text-cyan-400 bg-slate-700'}`} title="Paneli Gizle"><Sliders size={18} /></button>
            <div className="w-px bg-slate-700 my-1"></div>
-           <button 
-             onClick={toggleFullscreen}
-             className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors" 
-             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-           >
-             {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-           </button>
+           <button onClick={toggleFullscreen} className="p-2 text-slate-400 hover:text-white rounded-lg transition" title="Tam Ekran">{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
         </div>
       </div>
 
-      {showProModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-0 shadow-2xl relative overflow-hidden">
-            <button onClick={() => setShowProModal(false)} className="absolute top-4 right-4 bg-black/20 text-slate-400 hover:text-white p-1 rounded-full z-10 hover:bg-white/10">
-              <X size={20} />
-            </button>
-            <div className="h-32 bg-gradient-to-r from-amber-400 to-orange-600 relative flex items-center justify-center">
-              <Crown size={48} className="text-white drop-shadow-lg" />
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-white text-center mb-1">SnapPolish PRO</h2>
-              <p className="text-sm text-slate-400 text-center mb-6">You are in test mode.</p>
-              <button onClick={() => setShowProModal(false)} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-all">
-                Continue Testing
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
