@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Download, Image as ImageIcon, Palette, Layers, Maximize, Sliders, Crown, X, Check, Monitor, Minimize, ChevronDown, ChevronUp, Box, Move, Type } from 'lucide-react';
 
 export default function SnapPolishApp() {
   // State: Editing Settings
@@ -10,7 +10,10 @@ export default function SnapPolishApp() {
     background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
     windowControls: true,
     darkMode: true,
-    scale: 1
+    scale: 100, // Resim ölçeği (%)
+    rotate: 0,  // Döndürme (derece)
+    tilt: 0,    // 3D Eğim (derece)
+    showWatermark: true // Filigran görünürlüğü
   });
 
   const [image, setImage] = useState("https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
@@ -114,20 +117,17 @@ export default function SnapPolishApp() {
   };
 
   return (
-    // Değişiklik 1: h-screen ve overflow-hidden ile tüm sayfayı sabitledik.
-    // flex-col-reverse ile mobilde panellerin yerini değiştirdik (Kontrol altta, Resim üstte).
     <div className="h-screen w-full bg-slate-950 text-slate-200 font-sans flex flex-col-reverse md:flex-row overflow-hidden">
       
-      {/* LEFT PANEL: CONTROLS (Mobile: Bottom Sheet, Desktop: Sidebar) */}
+      {/* LEFT PANEL: CONTROLS */}
       <div 
         className={`bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col z-30 shadow-2xl transition-all duration-300 ease-in-out
           ${showSidebar 
-            ? 'h-[45vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' // Mobilde %45 yükseklik
-            : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0' // Mobilde sadece başlık görünür
+            ? 'h-[45vh] md:h-screen w-full md:w-80 translate-y-0 md:translate-x-0' 
+            : 'h-12 md:h-screen w-full md:w-0 overflow-hidden opacity-100 md:opacity-0'
           }
         `}
       >
-        {/* Mobile Toggle Handle (Sadece mobilde görünür) */}
         <div 
           className="md:hidden w-full flex justify-center py-2 bg-slate-800 cursor-pointer"
           onClick={toggleSidebar}
@@ -144,7 +144,6 @@ export default function SnapPolishApp() {
               SnapPolish
             </h1>
           </div>
-          {/* Mobile Collapse Button */}
           <button onClick={toggleSidebar} className="md:hidden text-slate-400">
             {showSidebar ? <ChevronDown size={20}/> : <ChevronUp size={20}/>}
           </button>
@@ -193,9 +192,37 @@ export default function SnapPolishApp() {
             </div>
           </section>
 
+          {/* New Section: Transform */}
           <section className="space-y-4">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <Sliders size={14} /> Effects
+              <Move size={14} /> Transform
+            </label>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>Scale</span>
+                <span>{settings.scale}%</span>
+              </div>
+              <input type="range" min="50" max="150" value={settings.scale} onChange={(e) => setSettings({...settings, scale: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>Rotate</span>
+                <span>{settings.rotate}°</span>
+              </div>
+              <input type="range" min="-15" max="15" value={settings.rotate} onChange={(e) => setSettings({...settings, rotate: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>3D Tilt</span>
+                <span>{settings.tilt}°</span>
+              </div>
+              <input type="range" min="-20" max="20" value={settings.tilt} onChange={(e) => setSettings({...settings, tilt: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+              <Sliders size={14} /> Effects & Options
             </label>
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-400">
@@ -204,17 +231,28 @@ export default function SnapPolishApp() {
               </div>
               <input type="range" min="0" max="5" value={settings.shadow} onChange={(e) => setSettings({...settings, shadow: parseInt(e.target.value)})} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
             </div>
-             <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
-               <span className="text-sm text-slate-300">Window Controls</span>
-               <button onClick={() => setSettings({...settings, windowControls: !settings.windowControls})} className={`w-10 h-6 rounded-full transition-colors relative ${settings.windowControls ? 'bg-cyan-600' : 'bg-slate-700'}`}>
-                 <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.windowControls ? 'translate-x-4' : 'translate-x-0'}`}></div>
-               </button>
-             </div>
-             <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
-               <span className="text-sm text-slate-300">Dark Mode</span>
-               <button onClick={() => setSettings({...settings, darkMode: !settings.darkMode})} className={`w-10 h-6 rounded-full transition-colors relative ${settings.darkMode ? 'bg-cyan-600' : 'bg-slate-700'}`}>
-                 <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.darkMode ? 'translate-x-4' : 'translate-x-0'}`}></div>
-               </button>
+             <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => setSettings({...settings, windowControls: !settings.windowControls})} 
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${settings.windowControls ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  <Box size={18} />
+                  <span className="text-xs font-medium">Controls</span>
+                </button>
+                <button 
+                  onClick={() => setSettings({...settings, darkMode: !settings.darkMode})} 
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${settings.darkMode ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  <Monitor size={18} />
+                  <span className="text-xs font-medium">Dark Mode</span>
+                </button>
+                <button 
+                  onClick={() => setSettings({...settings, showWatermark: !settings.showWatermark})} 
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all col-span-2 ${settings.showWatermark ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  <Type size={18} />
+                  <span className="text-xs font-medium">Watermark</span>
+                </button>
              </div>
           </section>
 
@@ -252,7 +290,6 @@ export default function SnapPolishApp() {
       <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 md:p-8 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
         
         {/* EXPORT REF WRAPPER */}
-        {/* Değişiklik 2: Mobilde resmin çok büyük olmasını engellemek için max-h-[50vh] ekledik. */}
         <div 
           ref={exportRef}
           className="relative transition-all duration-300 ease-out shadow-2xl flex items-center justify-center"
@@ -261,11 +298,19 @@ export default function SnapPolishApp() {
             padding: `${settings.padding}px`,
             maxWidth: '100%',
             maxHeight: '100%',
+            // Container içinde perspektif
+            perspective: '1000px',
+            overflow: 'visible' 
           }}
         >
           <div 
             className={`relative overflow-hidden transition-all duration-300 ${getShadowClass(settings.shadow)} ${settings.darkMode ? 'bg-slate-900' : 'bg-white'}`}
-            style={{ borderRadius: `${settings.borderRadius}px` }}
+            style={{ 
+              borderRadius: `${settings.borderRadius}px`,
+              // Transform değerlerini uygula
+              transform: `scale(${settings.scale / 100}) rotate(${settings.rotate}deg) rotateX(${settings.tilt}deg) rotateY(${settings.tilt / 2}deg)`,
+              transformStyle: 'preserve-3d'
+            }}
           >
             {settings.windowControls && (
               <div className={`h-6 md:h-8 px-2 md:px-4 flex items-center gap-1.5 md:gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
@@ -280,11 +325,13 @@ export default function SnapPolishApp() {
 
             <img src={image} alt="Preview" className="max-w-full max-h-[40vh] md:max-h-[60vh] object-contain block" crossOrigin="anonymous" />
 
-            <div className="absolute bottom-2 md:bottom-4 right-2 md:right-4 opacity-30 hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[8px] md:text-[10px] font-bold text-white">
-                 <Monitor size={10} /> SnapPolish
+            {settings.showWatermark && (
+              <div className="absolute bottom-2 md:bottom-4 right-2 md:right-4 opacity-30 hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[8px] md:text-[10px] font-bold text-white">
+                  <Monitor size={10} /> SnapPolish
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
