@@ -43,13 +43,17 @@ export default function SnapPolishApp() {
   const logoInputRef = useRef(null);
   const exportRef = useRef(null);
 
-  // İndirme aracını yükle (Kurulumsuz çalışması için)
+  // İndirme aracını yükle (Kurulumsuz çalışması için CDN kullanıyoruz)
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
     script.async = true;
     document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
+    return () => { 
+      if(document.body.contains(script)) {
+        document.body.removeChild(script); 
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -134,7 +138,7 @@ export default function SnapPolishApp() {
     
     try {
       if (typeof window.html2canvas === 'undefined') {
-        alert('İndirme aracı hazırlanıyor, lütfen 3 saniye sonra tekrar deneyin.');
+        alert('İndirme aracı yükleniyor, lütfen 3 saniye sonra tekrar deneyin.');
         setIsDownloading(false);
         return;
       }
@@ -399,6 +403,7 @@ export default function SnapPolishApp() {
             {settings.mockup === 'browser' && (
               <div className={`h-6 md:h-8 px-3 flex items-center gap-2 border-b ${settings.darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
                 <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div><div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div></div>
+                {/* Browser URL Display */}
                 <div className={`ml-2 flex-1 h-4 rounded flex items-center px-2 opacity-40 text-[8px] md:text-[10px] ${settings.darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
                   {settings.browserText}
                 </div>
